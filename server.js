@@ -1,0 +1,14 @@
+const express=require("express"),path=require("path"),session=require("express-session"),bcrypt=require("bcryptjs"),Database=require("better-sqlite3");
+const app=express(),db=new Database("dvbbet.db");
+db.exec(`CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,credits INTEGER DEFAULT 1000,ref TEXT UNIQUE,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS plays(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,game TEXT,cost INTEGER,result INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS referrals(id INTEGER PRIMARY KEY AUTOINCREMENT,referrer_id INTEGER,referred_id INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP);`);
+app.use(express.json());app.use(express.static(path.join(__dirname,"public")));
+app.use(session({secret:process.env.SESSION_SECRET||"CHANGE_ME",resave:false,saveUninitialized:false,cookie:{httpOnly:true,sameSite:"lax"}}));
+const auth=(q,s,n)=>q.session.userId?n():s.status(401).json({error:"Faça login."});
+app.post("/api/register",(q,s)=>{const{name,email,password,ref}=q.body||{};if(!name||!email||!password||password.length<6)return s.status(400).json({error:"Informe nome, e-mail e senha com 6+ caracteres."});try{const code=Math.random().toString(36).slice(2,8).toUpperCase(),h=bcrypt.hashSync(password,10),r=db.prepare("INSERT INTO users(name,email,password,ref) VALUES(?,?,?,?)").run(name,email,h,code);if(ref){const x=db.prepare("SELECT id FROM users WHERE ref=?").get(String(ref).toUpperCase());if(x)db.prepare("INSERT INTO referrals(referrer_id,referred_id) VALUES(?,?)").run(x.id,r.lastInsertRowid)}q.session.userId=r.lastInsertRowid;s.json({ok:true})}catch(e){s.status(400).json({error:"E-mail já cadastrado."})}});
+app.post("/api/login",(q,s)=>{const u=db.prepare("SELECT * FROM users WHERE email=?").get(q.body.email);if(!u||!bcrypt.compareSync(q.body.password,u.password))return s.status(401).json({error:"E-mail ou senha inválidos."});q.session.userId=u.id;s.json({ok:true})});
+app.get("/api/me",auth,(q,s)=>s.json(db.prepare("SELECT id,name,email,credits,ref,created_at FROM users WHERE id=?").get(q.session.userId)));
+app.get("/api/plays",auth,(q,s)=>s.json(db.prepare("SELECT game,cost,result,created_at FROM plays WHERE user_id=? ORDER BY id DESC LIMIT 30").all(q.session.userId)));
+app.post("/api/play",auth,(q,s)=>{const game=String(q.body.game||"Jogo"),u=db.prepare("SELECT credits FROM users WHERE id=?").get(q.session.userId);if(u.credits<10)return s.status(400).json({error:"Créditos insuficientes."});const result=Math.floor(Math.random()*41);db.transaction(()=>{db.prepare("UPDATE users SET credits=credits-10 WHERE id=?").run(q.session.userId);db.prepare("INSERT INTO plays(user_id,game,cost,result) VALUES(?,?,?,?)").run(q.session.userId,game,10,result)})();s.json({result})});
+app.listen(process.env.PORT||3000,()=>console.log("DVBBet V3 em http://localhost:3000"));
