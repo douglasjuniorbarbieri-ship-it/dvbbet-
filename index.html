@@ -1,0 +1,10 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DVBBet</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="logo">DVB<span>BET</span></div><div><button onclick="openAuth('login')">Entrar</button><button class="gold" onclick="openAuth('register')">Criar conta</button></div></header>
+<section class="hero"><div><small>DVBBET • VERSÃO DEMO</small><h1>Seu espaço de jogos, pontos e desafios.</h1><p>Experiência própria para celular, com créditos virtuais, bônus e indicação.</p><button class="gold big" onclick="document.querySelector('#games').scrollIntoView({behavior:'smooth'})">Começar</button></div><div class="balance"><small>SEU SALDO VIRTUAL</small><strong id="balance">—</strong><span id="user">Entre para acessar</span></div></section>
+<main id="games"><h2>Jogos</h2><div class="grid">
+<article><div class="emoji">🎰</div><h3>DV Slots</h3><p>Rodada demonstrativa por 10 créditos.</p><button onclick="play('DV Slots')">Jogar</button></article>
+<article><div class="emoji">🎡</div><h3>Roda DV</h3><p>Desafio de pontos virtuais.</p><button onclick="play('Roda DV')">Jogar</button></article>
+<article><div class="emoji">🃏</div><h3>DV Cards</h3><p>Jogo casual demonstrativo.</p><button onclick="play('DV Cards')">Jogar</button></article></div>
+<section class="profile"><h2>Minha conta</h2><p id="account">Entre ou crie uma conta.</p><div id="history"></div></section></main>
+<div id="modal" class="overlay hidden"><div class="modal"><button class="x" onclick="closeAuth()">×</button><div id="form"></div></div></div>
+<footer>DVBBet DEMO • Sem depósitos, saques ou apostas com dinheiro real.</footer><script src="app.js"></script></body></html>

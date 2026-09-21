@@ -1,0 +1,9 @@
+const $=s=>document.querySelector(s);
+async function api(url,opt={}){const r=await fetch(url,{headers:{"Content-Type":"application/json"},...opt});const j=await r.json();if(!r.ok)throw Error(j.error||"Erro");return j}
+function openAuth(t){const reg=t==="register";$("#form").innerHTML=`<h2>${reg?"Criar conta":"Entrar"}</h2>${reg?'<input id="name" placeholder="Nome">':''}<input id="email" type="email" placeholder="E-mail"><input id="password" type="password" placeholder="Senha"><input id="ref" placeholder="Código de indicação (opcional)" ${reg?"":"style='display:none'"}><button class="gold action" onclick="${reg?"register()":"login()"}">${reg?"Criar conta":"Entrar"}</button><p id="msg"></p>`;$("#modal").classList.remove("hidden")}
+function closeAuth(){$("#modal").classList.add("hidden")}
+async function register(){try{await api("/api/register",{method:"POST",body:JSON.stringify({name:$("#name").value,email:$("#email").value,password:$("#password").value,ref:$("#ref").value})});closeAuth();refresh()}catch(e){$("#msg").textContent=e.message}}
+async function login(){try{await api("/api/login",{method:"POST",body:JSON.stringify({email:$("#email").value,password:$("#password").value})});closeAuth();refresh()}catch(e){$("#msg").textContent=e.message}}
+async function play(game){try{const j=await api("/api/play",{method:"POST",body:JSON.stringify({game})});alert("Resultado demonstrativo: "+j.result+" pontos virtuais.");refresh()}catch(e){alert(e.message)}}
+async function refresh(){try{const u=await api("/api/me");$("#balance").textContent=u.credits.toLocaleString("pt-BR");$("#user").textContent=u.name;$("#account").innerHTML=`<b>${u.name}</b> • ${u.email}<br>Código de indicação: <b>${u.ref}</b>`;const p=await api("/api/plays");$("#history").innerHTML="<h3>Últimas partidas</h3>"+(p.length?p.map(x=>`<div class="row"><span>${x.game}</span><span>-${x.cost} / ${x.result}</span></div>`).join(""):"Nenhuma partida ainda.")}catch(e){}}
+refresh();
